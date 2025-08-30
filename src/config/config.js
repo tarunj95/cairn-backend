@@ -23,6 +23,10 @@ const envVarsSchema = Joi.object()
     SMTP_USERNAME: Joi.string().description('username for email server'),
     SMTP_PASSWORD: Joi.string().description('password for email server'),
     EMAIL_FROM: Joi.string().description('the from field in the emails sent by the app'),
+    STRAVA_CLIENT_ID: Joi.string().required().description('Strava OAuth Client ID'),
+    STRAVA_CLIENT_SECRET: Joi.string().required().description('Strava OAuth Client Secret'),
+    STRAVA_CALLBACK_URL: Joi.string().required().description('Strava OAuth Callback URL'),
+    SESSION_SECRET: Joi.string().required().description('Session secret for express-session'),
   })
   .unknown();
 
@@ -60,5 +64,13 @@ module.exports = {
       },
     },
     from: envVars.EMAIL_FROM,
+  },
+  strava: {
+    clientId: envVars.STRAVA_CLIENT_ID,
+    clientSecret: envVars.STRAVA_CLIENT_SECRET,
+    callbackUrl: envVars.STRAVA_CALLBACK_URL,
+  },
+  session: {
+    secret: envVars.SESSION_SECRET,
   },
 };

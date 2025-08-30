@@ -2,7 +2,7 @@ const httpStatus = require('http-status');
 const pick = require('../utils/pick');
 const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
-const { userService } = require('../services');
+const { userService , stravaService} = require('../services');
 
 const createUser = catchAsync(async (req, res) => {
   const user = await userService.createUser(req.body);
@@ -15,6 +15,18 @@ const getUsers = catchAsync(async (req, res) => {
   const result = await userService.queryUsers(filter, options);
   res.send(result);
 });
+
+const getStravaProfile = async (req, res) => {
+  const user = req.user;
+
+  if (!user.accessToken) {
+    return res.status(httpStatus.UNAUTHORIZED).send({ message: 'Missing Strava token' });
+  }
+
+  const profile = await getStravaAthlete(user.accessToken);
+  res.status(httpStatus.OK).send(profile);
+};
+
 
 const getUser = catchAsync(async (req, res) => {
   const user = await userService.getUserById(req.params.userId);
@@ -40,4 +52,5 @@ module.exports = {
   getUser,
   updateUser,
   deleteUser,
+  getStravaProfile,
 };

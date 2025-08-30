@@ -2,9 +2,11 @@ const express = require('express');
 const authRoute = require('./auth.route');
 const userRoute = require('./user.route');
 const docsRoute = require('./docs.route');
+const newsletterRoute = require('./newsletter.route')
 const config = require('../../config/config');
 
 const router = express.Router();
+console.log('Reached to route js')
 
 const defaultRoutes = [
   {
@@ -15,6 +17,10 @@ const defaultRoutes = [
     path: '/users',
     route: userRoute,
   },
+  {
+    path: '/newsletter',
+    route: newsletterRoute
+  }
 ];
 
 const devRoutes = [

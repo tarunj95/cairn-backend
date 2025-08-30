@@ -11,25 +11,29 @@ const userSchema = mongoose.Schema(
       required: true,
       trim: true,
     },
-    email: {
+    lastName:{
       type: String,
       required: true,
+      trim: true,
+    },
+    email: {
+      type: String,
       unique: true,
+      sparse: true, // make it optional for Strava users
       trim: true,
       lowercase: true,
       validate(value) {
-        if (!validator.isEmail(value)) {
+        if (value && !validator.isEmail(value)) {
           throw new Error('Invalid email');
         }
       },
     },
     password: {
       type: String,
-      required: true,
       trim: true,
       minlength: 8,
       validate(value) {
-        if (!value.match(/\d/) || !value.match(/[a-zA-Z]/)) {
+        if (value && (!value.match(/\d/) || !value.match(/[a-zA-Z]/))) {
           throw new Error('Password must contain at least one letter and one number');
         }
       },
@@ -44,41 +48,45 @@ const userSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    stravaId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    accessToken: {
+      type: String,
+    },
+    refreshToken: {
+      type: String,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-// add plugin that converts mongoose to json
+// Plugins
 userSchema.plugin(toJSON);
 userSchema.plugin(paginate);
 
-/**
- * Check if email is taken
- * @param {string} email - The user's email
- * @param {ObjectId} [excludeUserId] - The id of the user to be excluded
- * @returns {Promise<boolean>}
- */
+// Static methods
 userSchema.statics.isEmailTaken = async function (email, excludeUserId) {
+  if (!email) return false;
   const user = await this.findOne({ email, _id: { $ne: excludeUserId } });
   return !!user;
 };
 
-/**
- * Check if password matches the user's password
- * @param {string} password
- * @returns {Promise<boolean>}
- */
+// Instance methods
 userSchema.methods.isPasswordMatch = async function (password) {
-  const user = this;
-  return bcrypt.compare(password, user.password);
+  if (!this.password) return false;
+  return bcrypt.compare(password, this.password);
 };
 
+// Hash password if modified
 userSchema.pre('save', async function (next) {
-  const user = this;
-  if (user.isModified('password')) {
-    user.password = await bcrypt.hash(user.password, 8);
+  if (this.isModified('password') && this.password) {
+    this.password = await bcrypt.hash(this.password, 8);
   }
   next();
 });

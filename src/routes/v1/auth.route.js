@@ -3,9 +3,15 @@ const validate = require('../../middlewares/validate');
 const authValidation = require('../../validations/auth.validation');
 const authController = require('../../controllers/auth.controller');
 const auth = require('../../middlewares/auth');
+const passport = require('../../config/passport').passport;
+const catchAsync = require('../../utils/catchAsync');
+const tokenService = require('../../services/token.service');
+// Correct import for getStravaProfile if needed
+const { getStravaProfile } = require('../../controllers/user.controller');
 
 const router = express.Router();
 
+// Existing auth routes
 router.post('/register', validate(authValidation.register), authController.register);
 router.post('/login', validate(authValidation.login), authController.login);
 router.post('/logout', validate(authValidation.logout), authController.logout);
@@ -15,7 +21,35 @@ router.post('/reset-password', validate(authValidation.resetPassword), authContr
 router.post('/send-verification-email', auth(), authController.sendVerificationEmail);
 router.post('/verify-email', validate(authValidation.verifyEmail), authController.verifyEmail);
 
+// Strava OAuth start route
+router.get(
+  '/strava',
+  passport.authenticate('strava', {
+    scope: [ 'activity:read_all'], // fixed scopes
+  })
+);
+
+// Strava OAuth callback route
+router.get(
+  '/strava/callback',
+  passport.authenticate('strava', { session: false, failureRedirect: '/v1/auth/failed' }),
+  catchAsync(async (req, res) => {
+    const user = req.user;
+    const tokens = await tokenService.generateAuthTokens(user);
+
+    // Redirect to frontend with access token in query
+    const redirectUrl = `${process.env.FRONTEND_URL}/oauth-success?token=${tokens.access.token}`;
+    res.redirect(redirectUrl);
+  })
+);
+
+// Strava login failure route
+router.get('/failed', (req, res) => {
+  res.status(401).json({ message: 'Strava login failed' });
+});
+
 module.exports = router;
+
 
 /**
  * @swagger
@@ -288,4 +322,36 @@ module.exports = router;
  *             example:
  *               code: 401
  *               message: verify email failed
+ */
+/**
+ * @swagger
+ * /auth/strava:
+ *   get:
+ *     summary: Redirect to Strava OAuth login
+ *     tags: [Auth]
+ *     responses:
+ *       302:
+ *         description: Redirect to Strava
+ */
+
+/**
+ * @swagger
+ * /auth/strava/callback:
+ *   get:
+ *     summary: Handle Strava OAuth callback
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Successfully authenticated with Strava
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *                 tokens:
+ *                   $ref: '#/components/schemas/AuthTokens'
+ *       401:
+ *         description: Strava login failed
  */
