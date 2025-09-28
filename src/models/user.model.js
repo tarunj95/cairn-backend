@@ -3,6 +3,7 @@ const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const { toJSON, paginate } = require('./plugins');
 const { roles } = require('../config/roles');
+const { boolean } = require('joi');
 
 const userSchema = mongoose.Schema(
   {
@@ -60,6 +61,11 @@ const userSchema = mongoose.Schema(
     refreshToken: {
       type: String,
     },
+
+    subscribed:{
+      type: Boolean,
+      default: true
+    }
   },
   {
     timestamps: true,

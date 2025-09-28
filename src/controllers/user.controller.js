@@ -3,6 +3,10 @@ const pick = require('../utils/pick');
 const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
 const { userService , stravaService} = require('../services');
+const httpStatus = require('http-status');
+const { userService } = require('../services');
+const catchAsync = require('../utils/catchAsync');
+
 
 const createUser = catchAsync(async (req, res) => {
   const user = await userService.createUser(req.body);
@@ -46,6 +50,16 @@ const deleteUser = catchAsync(async (req, res) => {
   res.status(httpStatus.NO_CONTENT).send();
 });
 
+/**
+ * Unsubscribe a user (set subscribed = false)
+ */
+const unsubscribe = catchAsync(async (req, res) => {
+  const { userId } = req.params; // expecting /users/:userId/unsubscribe
+  const user = await userService.unsubscribeUser(userId);
+  res.status(httpStatus.OK).send({ message: 'You have been unsubscribed', user });
+});
+
+
 module.exports = {
   createUser,
   getUsers,
@@ -53,4 +67,5 @@ module.exports = {
   updateUser,
   deleteUser,
   getStravaProfile,
+  unsubscribe,
 };

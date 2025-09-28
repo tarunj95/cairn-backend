@@ -79,6 +79,23 @@ const deleteUserById = async (userId) => {
   return user;
 };
 
+/* #############################################################################################
+/**
+ * Unsubscribe user by id
+ * @param {ObjectId} userId
+ * @returns {Promise<User>}
+ */
+const unsubscribeUser = async (userId) => {
+  const user = await getUserById(userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  user.subscribed = false;
+  await user.save();
+  return user;
+};
+
+// #############################################################################################
 module.exports = {
   createUser,
   queryUsers,
@@ -86,4 +103,6 @@ module.exports = {
   getUserByEmail,
   updateUserById,
   deleteUserById,
+  // ########
+  unsubscribeUser,
 };
