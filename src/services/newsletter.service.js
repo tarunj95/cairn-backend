@@ -10,8 +10,8 @@ const newsletterSignUp = async(email) =>{
 }
 
 const newsletterUnsubscribe = async(email) =>{
-    if (await Newsletter.isEmailTaken(email)) {
-        throw new ApiError(httpStatus.BAD_REQUEST, 'Email already exist!');
+    if (!await Newsletter.isEmailTaken(email)) {
+        throw new ApiError(httpStatus.BAD_REQUEST, 'Email doesnt exist!');
       }
       // remove method
     //   return Newsletter.create(email);
